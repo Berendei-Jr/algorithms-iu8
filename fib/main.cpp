@@ -1,7 +1,7 @@
 #include <iostream>
 
 struct matrix {
-    int data[2][2]{1,1,1,0};
+    long long data[2][2]{1,1,1,0};
     matrix operator*(const matrix& m) {
         matrix new_matrix {0, 0, 0, 0};
         for (int x = 0; x < 2; ++x) {
@@ -34,6 +34,8 @@ T pow(T b, int p) {
 int main() {
     matrix Q;
     int n; std::cin >> n;
+    if (n < 0)
+        return 0;
     if (n == 0) {
         std::cout << 0 << std::endl;
         return 0;

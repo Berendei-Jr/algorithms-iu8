@@ -39,6 +39,9 @@ int main() {
     if (n == 0) {
         std::cout << 0 << std::endl;
         return 0;
+    } else if (n == 1) {
+        std::cout << 1 << std::endl;
+        return 0;
     }
     std::cout << pow<matrix>(Q, n - 1).data[0][0] << std::endl;
     return 0;

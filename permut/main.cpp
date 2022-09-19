@@ -1,14 +1,25 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 #include <set>
 
-std::ostream& operator<<(std::ostream& out, const std::vector<long long>& v) {
-    for (auto& i: v) {
-        std::cout << i << " ";
+class A {
+public:
+    A() {
+        Foo();
     }
-    return out;
-}
+    virtual void Foo() {
+        std::cout << "a";
+    }
+};
+
+class B: public A {
+public:
+    void Foo() override {
+        std::cout << "b";
+    }
+};
 
 void permute(std::set<std::vector<long long>>& set, std::vector<long long>& vec, size_t n) {
     if (n < 2) {
@@ -23,33 +34,5 @@ void permute(std::set<std::vector<long long>>& set, std::vector<long long>& vec,
 }
 
 int main() {
-    std::string str;
-    std::getline(std::cin, str);
-    str.push_back(' ');
-
-    std::vector<long long> initPermut;
-    std::string num;
-    for (auto c: str) {
-        if (c == ' ' && !num.empty()) {
-            initPermut.push_back(std::stoll(num));
-            num.clear();
-        } else {
-            num.push_back(c);
-        }
-    }
-
-    std::set<std::vector<long long>> setOfPermuts;
-    permute(setOfPermuts, initPermut, initPermut.size());
-
-    for (auto& i: setOfPermuts) {
-        if (i < initPermut)
-            continue;
-        std::cout << i << std::endl;
-    }
-    for (auto& i: setOfPermuts) {
-        if (i == initPermut)
-            break;
-        std::cout << i << std::endl;
-    }
-    return 0;
+    B b;
 }

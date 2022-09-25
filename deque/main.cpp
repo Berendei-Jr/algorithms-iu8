@@ -1,5 +1,7 @@
 #include <iostream>
 #include <memory>
+#include <string>
+#include <sstream>
 
 template<class T>
 class Deque {
@@ -79,19 +81,23 @@ public:
         }
     }
     void print() {
+        if (!_size) {
+            std::cout << "empty\n";
+            return;
+        }
         if (_first <= _last) {
-            for (size_t i = _first; i <= _last; ++i) {
+            for (size_t i = _first; i < _last; ++i) {
                 std::cout << _data[i] << " ";
             }
-            std::cout << std::endl;
+            std::cout << _data[_last] << std::endl;
         } else {
             for (size_t i = _first; i < _max_size; ++i) {
                 std::cout << _data[i] << " ";
             }
-            for (size_t i = 0; i <= _last; ++i) {
+            for (size_t i = 0; i < _last; ++i) {
                 std::cout << _data[i] << " ";
             }
-            std::cout << std::endl;
+            std::cout << _data[_last] << std::endl;
         }
     }
 
@@ -104,18 +110,88 @@ private:
 };
 
 int main() {
-    Deque<int> d(5);
-    d.push_back(1);
-    d.push_front(2);
-    d.push_back(3);
-    d.push_front(4);
-    d.push_back(5);
-    std::cout << d.pop_back() << std::endl;
-    std::cout << d.pop_front() << std::endl;
-    std::cout << d.pop_front() << std::endl;
-    std::cout << d.pop_front() << std::endl;
-    std::cout << d.pop_front() << std::endl;
-    std::cout << d.pop_front() << std::endl;
-    d.print();
+    int max_size;
+    std::string command;
+    bool size_set = false;
+    while (std::getline(std::cin, command)) {
+        if (command.empty()) {
+            continue;
+        }
+        std::stringstream sstr(command);
+        std::string fragment;
+        sstr >> fragment;
+        if (fragment == "set_size") {
+            sstr >> max_size;
+            if (max_size < 0 || !sstr.eof()) {
+                std::cout << "error\n";
+                continue;
+            }
+            size_set = true;
+            break;
+        } else {
+            std::cout << "error\n";
+            continue;
+        }
+    }
+    if (!size_set) {
+        return 0;
+    }
+    Deque<long long> deq(max_size);
+    while (std::getline(std::cin, command)) {
+        if (command.empty())
+            continue;
+        long long value;
+        std::stringstream sstr(command);
+        std::string fragment;
+        sstr >> fragment;
+        if (fragment == "pushb") {
+            sstr >> value;
+            if (!sstr.eof()) {
+                std::cout << "error\n";
+                continue;
+            }
+            deq.push_back(value);
+            continue;
+        } else if (fragment == "pushf") {
+            sstr >> value;
+            if (!sstr.eof()) {
+                std::cout << "error\n";
+                continue;
+            }
+            deq.push_front(value);
+            continue;
+        } else if (fragment == "popf") {
+            if (!sstr.eof()) {
+                std::cout << "error\n";
+                continue;
+            }
+            try {
+                std::cout << deq.pop_front() << std::endl;
+            } catch (std::out_of_range&) {
+                continue;
+            }
+        } else if (fragment == "popb") {
+            if (!sstr.eof()) {
+                std::cout << "error\n";
+                continue;
+            }
+            try {
+                std::cout << deq.pop_back() << std::endl;
+            } catch (std::out_of_range &) {
+                continue;
+            }
+        } else if (fragment == "print") {
+            if (!sstr.eof()) {
+                std::cout << "error\n";
+                continue;
+            }
+            deq.print();
+            continue;
+        } else {
+            std::cout << "error\n";
+            continue;
+        }
+    }
+
     return 0;
 }

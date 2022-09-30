@@ -3,6 +3,22 @@
 #include <string>
 #include <sstream>
 
+bool valueCheck(std::istream& in) {
+    if (in.eof()) {
+        return false;
+    }
+    if (in.peek() != ' ') {
+        return false;
+    } else {
+        in.ignore(1);
+    }
+    char c = in.peek();
+    if (c < '0' || c > '9') {
+        return false;
+    }
+    return true;
+}
+
 template<class T>
 class Deque {
 public:
@@ -51,7 +67,7 @@ public:
             _last = _first = 0;
             --_size;
             return _data[tmp];
-        } else if (_last == 0) {
+        } else if (!_last) {
             _last = _size - 1;
             --_size;
             return _data[0];
@@ -112,39 +128,54 @@ private:
 int main() {
     int max_size;
     std::string command;
-    bool size_set = false;
     while (std::getline(std::cin, command)) {
         if (command.empty()) {
+            continue;
+        }
+        if (*command.begin() == ' ') {
+            std::cout << "error\n";
             continue;
         }
         std::stringstream sstr(command);
         std::string fragment;
         sstr >> fragment;
         if (fragment == "set_size") {
+            if (!valueCheck(sstr)) {
+                std::cout << "error\n";
+                continue;
+            }
             sstr >> max_size;
             if (max_size < 0 || !sstr.eof()) {
                 std::cout << "error\n";
                 continue;
             }
-            size_set = true;
             break;
         } else {
             std::cout << "error\n";
             continue;
         }
     }
-    if (!size_set) {
-        return 0;
-    }
+
     Deque<long long> deq(max_size);
+
+
     while (std::getline(std::cin, command)) {
         if (command.empty())
             continue;
+        if (*command.begin() == ' ') {
+            std::cout << "error\n";
+            continue;
+        }
+
         long long value;
         std::stringstream sstr(command);
         std::string fragment;
         sstr >> fragment;
         if (fragment == "pushb") {
+            if (!valueCheck(sstr)) {
+                std::cout << "error\n";
+                continue;
+            }
             sstr >> value;
             if (!sstr.eof()) {
                 std::cout << "error\n";
@@ -153,6 +184,10 @@ int main() {
             deq.push_back(value);
             continue;
         } else if (fragment == "pushf") {
+            if (!valueCheck(sstr)) {
+                std::cout << "error\n";
+                continue;
+            }
             sstr >> value;
             if (!sstr.eof()) {
                 std::cout << "error\n";

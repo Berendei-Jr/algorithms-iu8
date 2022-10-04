@@ -1,22 +1,18 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <sstream>
+#include <algorithm>
 
-bool valueCheck(std::istream& in) {
-    if (in.eof()) {
-        return false;
-    }
-    if (in.peek() != ' ') {
-        return false;
+int getSize(const std::string& s) {
+    if (std::find_if(s.begin(), s.end(), [](char c){ return c < '0' || c > '9'; }) != s.end()) {
+        throw std::invalid_argument("");
     } else {
-        in.ignore(1);
+        int size = std::stoi(s);
+        if (size > 0)
+            return size;
+        else
+            throw std::invalid_argument("");
     }
-    char c = in.peek();
-    if (c < '0' || c > '9') {
-        return false;
-    }
-    return true;
 }
 
 template<class T>
@@ -31,12 +27,10 @@ public:
             return;
         }
         if ((_last == _max_size - 1) || !_size) {
-            _data[0] = data;
+            _data[_last = 0] = data;
             ++_size;
-            _last = 0;
         } else {
-            ++_last;
-            _data[_last] = data;
+            _data[++_last] = data;
             ++_size;
         }
     }
@@ -53,8 +47,7 @@ public:
             ++_size;
             _first = _max_size - 1;
         } else {
-            --_first;
-            _data[_first] = data;
+            _data[--_first] = data;
             ++_size;
         }
     }
@@ -82,7 +75,7 @@ public:
             std::cout << "underflow\n";
             throw std::out_of_range("");
         } else if (_size == 1) {
-            size_t tmp = _last;
+            size_t tmp = _first;
             _last = _first = 0;
             --_size;
             return _data[tmp];
@@ -91,9 +84,8 @@ public:
             --_size;
             return _data[_max_size - 1];
         } else {
-            ++_first;
             --_size;
-            return _data[_first - 1];
+            return _data[_first++];
         }
     }
     void print() {
@@ -101,20 +93,14 @@ public:
             std::cout << "empty\n";
             return;
         }
-        if (_first <= _last) {
-            for (size_t i = _first; i < _last; ++i) {
-                std::cout << _data[i] << " ";
+        for (int i = _first; i != _last; ++i) {
+            if (i == _max_size) {
+                i = -1;
+                continue;
             }
-            std::cout << _data[_last] << std::endl;
-        } else {
-            for (size_t i = _first; i < _max_size; ++i) {
-                std::cout << _data[i] << " ";
-            }
-            for (size_t i = 0; i < _last; ++i) {
-                std::cout << _data[i] << " ";
-            }
-            std::cout << _data[_last] << std::endl;
+            std::cout << _data[i] << " ";
         }
+        std::cout << _data[_last] << std::endl;
     }
 
 private:
@@ -128,105 +114,57 @@ private:
 int main() {
     int max_size;
     std::string command;
-    while (std::getline(std::cin, command)) {
+    bool size_set = false;
+
+    while (std::getline(std::cin, command) && !size_set) {
         if (command.empty()) {
             continue;
         }
-        if (*command.begin() == ' ') {
-            std::cout << "error\n";
-            continue;
-        }
-        std::stringstream sstr(command);
-        std::string fragment;
-        sstr >> fragment;
-        if (fragment == "set_size") {
-            if (!valueCheck(sstr)) {
-                std::cout << "error\n";
-                continue;
-            }
-            sstr >> max_size;
-            if (max_size < 0 || !sstr.eof()) {
-                std::cout << "error\n";
-                continue;
-            }
-            break;
-        } else {
+        auto it = std::find_if(command.begin(), command.end(), isspace);
+        if (it == command.end()) { std::cout << "error\n"; continue; }
+        if (std::find_if(it + 1, command.end(), isspace) != command.end()) {  std::cout << "error\n"; continue; }
+        if (std::string(command.begin(), it) != "set_size") { std::cout << "error\n"; continue; }
+        std::string value = std::string(it + 1, command.end());
+        try {
+            max_size = getSize(value);
+            size_set = true;
+        } catch (const std::invalid_argument &) {
             std::cout << "error\n";
             continue;
         }
     }
+    if (!size_set) {
+        return 0;
+    }
+    Deque<std::string> deq(max_size);
 
-    Deque<long long> deq(max_size);
+    do {
+        if (command.empty()) { continue; }
 
+        auto it = std::find_if(command.begin(), command.end(), isspace);
+        std::string fragment(command.begin(), it);
+        if ((fragment == "pushb" || fragment == "pushf") && it != command.end()) {
+            if (std::find_if(it + 1, command.end(), isspace) != command.end()) { std::cout << "error\n"; continue; }
+        } else if (fragment == "popf" || fragment == "popb" || fragment == "print") {
+            if (it != command.end()) { std::cout << "error\n"; continue; }
+        } else { std::cout << "error\n"; continue; }
 
-    while (std::getline(std::cin, command)) {
-        if (command.empty())
-            continue;
-        if (*command.begin() == ' ') {
-            std::cout << "error\n";
-            continue;
-        }
-
-        long long value;
-        std::stringstream sstr(command);
-        std::string fragment;
-        sstr >> fragment;
         if (fragment == "pushb") {
-            if (!valueCheck(sstr)) {
-                std::cout << "error\n";
-                continue;
-            }
-            sstr >> value;
-            if (!sstr.eof()) {
-                std::cout << "error\n";
-                continue;
-            }
-            deq.push_back(value);
-            continue;
+            deq.push_back(std::string(it + 1, command.end()));
         } else if (fragment == "pushf") {
-            if (!valueCheck(sstr)) {
-                std::cout << "error\n";
-                continue;
-            }
-            sstr >> value;
-            if (!sstr.eof()) {
-                std::cout << "error\n";
-                continue;
-            }
-            deq.push_front(value);
-            continue;
+            deq.push_front(std::string(it + 1, command.end()));
         } else if (fragment == "popf") {
-            if (!sstr.eof()) {
-                std::cout << "error\n";
-                continue;
-            }
             try {
                 std::cout << deq.pop_front() << std::endl;
-            } catch (std::out_of_range&) {
-                continue;
-            }
+            } catch (std::out_of_range&) {}
         } else if (fragment == "popb") {
-            if (!sstr.eof()) {
-                std::cout << "error\n";
-                continue;
-            }
             try {
                 std::cout << deq.pop_back() << std::endl;
-            } catch (std::out_of_range &) {
-                continue;
-            }
+            } catch (std::out_of_range &) {}
         } else if (fragment == "print") {
-            if (!sstr.eof()) {
-                std::cout << "error\n";
-                continue;
-            }
             deq.print();
-            continue;
-        } else {
-            std::cout << "error\n";
-            continue;
-        }
-    }
+        } else { std::cout << "error\n"; }
+    } while (std::getline(std::cin, command));
 
     return 0;
 }

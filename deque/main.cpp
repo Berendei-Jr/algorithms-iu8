@@ -17,98 +17,101 @@ int getSize(const std::string& s) {
 
 template<class T>
 class Deque {
+
 public:
-    explicit Deque(size_t max_size): _max_size(max_size) {
-        _data.reset(new T[max_size]);
+    Deque() = delete;
+    explicit Deque(size_t size): _capacity(size), _size(0), _first(0), _last(0) {
+        _data.reset(new T[size]);
     }
-    void push_back(const T& data) {
-        if (_size == _max_size) {
-            std::cout << "overflow\n";
+
+    void push_front(const T &element) {
+        if (_size == _capacity) {
+            std::cout << "overflow" << std::endl;
             return;
         }
-        if ((_last == _max_size - 1) || !_size) {
-            _data[_last = 0] = data;
-            ++_size;
-        } else {
-            _data[++_last] = data;
-            ++_size;
+        if (_size != 0) {
+            if (_first == 0) {
+                _first = _capacity;
+            }
+            --_first;
         }
+        _data[_first] = element;
+        ++_size;
     }
-    void push_front(const T& data) {
-        if (_size == _max_size) {
-            std::cout << "overflow\n";
+
+    void push_back(const T &element) {
+        if (_size == _capacity) {
+            std::cout << "overflow" << std::endl;
             return;
         }
-        if (!_size) {
-            _data[0] = data;
-            ++_size;
-        } else if (_first == 0) {
-            _data[_max_size - 1] = data;
-            ++_size;
-            _first = _max_size - 1;
-        } else {
-            _data[--_first] = data;
-            ++_size;
+        if (_size != 0) {
+            ++_last;
+            if (_last == _capacity) {
+                _last = 0;
+            }
         }
+        _data[_last] = element;
+        ++_size;
     }
-    T pop_back() {
-        if (!_size) {
-            std::cout << "underflow\n";
-            throw std::out_of_range("");
-        } else if (_size == 1) {
-            size_t tmp = _last;
-            _last = _first = 0;
-            --_size;
-            return _data[tmp];
-        } else if (!_last) {
-            _last = _size - 1;
-            --_size;
-            return _data[0];
-        } else {
-            --_last;
-            --_size;
-            return _data[_last + 1];
-        }
-    }
+
     T pop_front() {
         if (!_size) {
             std::cout << "underflow\n";
             throw std::out_of_range("");
-        } else if (_size == 1) {
-            size_t tmp = _first;
-            _last = _first = 0;
-            --_size;
-            return _data[tmp];
-        } else if (_first == _max_size - 1) {
-            _first = 0;
-            --_size;
-            return _data[_max_size - 1];
-        } else {
-            --_size;
-            return _data[_first++];
         }
-    }
-    void print() {
+        T element = _data[_first];
+        ++_first;
+        if (_first == _capacity) {
+            _first = 0;
+        }
+        --_size;
         if (!_size) {
-            std::cout << "empty\n";
+            _first = 0;
+            _last = 0;
+        }
+        return element;
+    }
+
+    T pop_back() {
+        if (!_size) {
+            std::cout << "underflow\n";
+            throw std::out_of_range("");
+        }
+        T element = _data[_last];
+        if (!_last) {
+            _last = _capacity;
+        }
+        --_last;
+        --_size;
+        if (!_size) {
+            _first = 0;
+            _last = 0;
+        }
+        return element;
+    }
+
+    void print() {
+
+        if (!_size) {
+            std::cout <<"empty"<<std::endl;
             return;
         }
         for (int i = _first; i != _last; ++i) {
-            if (i == _max_size) {
+            if (i == _capacity) {
                 i = -1;
                 continue;
             }
-            std::cout << _data[i] << " ";
+            std::cout << _data[i] << " "; // ?
         }
         std::cout << _data[_last] << std::endl;
     }
 
 private:
     std::unique_ptr<T[]> _data;
-    size_t _first = 0;
-    size_t _last = 0;
-    size_t _size = 0;
-    size_t _max_size;
+    size_t _first;
+    size_t _last;
+    size_t _size;
+    size_t _capacity;
 };
 
 int main() {

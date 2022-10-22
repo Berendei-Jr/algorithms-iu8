@@ -1,3 +1,0 @@
-/mnt/c/Users/vedve/Documents/Projects/algorithms-iu8/permut/cmake-build-debug/CMakeFiles/permut.dir
-/mnt/c/Users/vedve/Documents/Projects/algorithms-iu8/permut/cmake-build-debug/CMakeFiles/edit_cache.dir
-/mnt/c/Users/vedve/Documents/Projects/algorithms-iu8/permut/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -1,13 +1,12 @@
 #include <iostream>
 #include <list>
-#include <memory>
 #include <algorithm>
 
 template<class T>
 class Node;
 
 template<class T>
-using node = std::shared_ptr<Node<T>>;
+using node = Node<T>*;
 using key_type = long long;
 
 template<class T>
@@ -15,11 +14,11 @@ class Node {
 public:
     Node(const node<T> father, const T& value, const key_type key, const bool is_left_child = true) :_father(father), _value(value), _key(key), _is_left_child(is_left_child) {}
     bool hasLeftChild() const { return _left_child != nullptr; }
-    auto leftChild() const { return _left_child; }
+    auto leftChild() { return _left_child; }
     bool hasRightChild() const { return _right_child != nullptr; }
-    auto rightChild() const { return _right_child; }
+    auto rightChild() { return _right_child; }
     bool isRoot() { return _father == nullptr; }
-    auto getFather() const { return _father; }
+    auto getFather() { return _father; }
     key_type getKey() const { return _key; }
     const T& getValue() const { return _value; }
     void setLeftChild(node<T> lc) { _left_child = lc; }
@@ -44,7 +43,7 @@ class splay_tree {
 public:
     void add(const key_type key, const T& value) {
         if (empty()) {
-            _root = std::make_shared<Node<T>>( nullptr, value, key );
+            _root = new Node<T>( nullptr, value, key );
         } else {
             auto new_node = insert(_root, 1, key, value);
             if (new_node.first) {
@@ -157,7 +156,7 @@ private:
             if (cur_node->hasLeftChild()) {
                 return insert(cur_node->leftChild(), depth + 1, key, value);
             } else {
-                auto new_node = std::make_shared<Node<T>>(cur_node, value, key);
+                auto new_node = new Node<T>(cur_node, value, key);
                 cur_node->setLeftChild(new_node);
                 return std::make_pair(new_node, depth + 1);
             }
@@ -165,7 +164,7 @@ private:
             if (cur_node->hasRightChild()) {
                 return insert(cur_node->rightChild(), depth + 1, key, value);
             } else {
-                auto new_node = std::make_shared<Node<T>>(cur_node, value, key, false);
+                auto new_node = new Node<T>(cur_node, value, key, false);
                 cur_node->setRightChild(new_node);
                 return std::make_pair(new_node, depth + 1);
             }
@@ -236,7 +235,7 @@ private:
         zig(n, left);
         zig(n, !left);
     }
-    std::pair<node<T>, size_t> find(node<T> cur_node, size_t depth, const key_type key) const {
+    std::pair<node<T>, size_t> find(node<T> cur_node, size_t depth, const key_type key) {
         if (cur_node->getKey() == key) {
             return std::make_pair(cur_node, depth);
         } else if (cur_node->getKey() > key && cur_node->hasLeftChild()) {
@@ -247,14 +246,14 @@ private:
             throw std::logic_error("error\n");
         }
     }
-    std::pair<node<T>, size_t> find_min(node<T> cur_node, size_t depth) const {
+    std::pair<node<T>, size_t> find_min(node<T> cur_node, size_t depth) {
         if (!cur_node->hasLeftChild()) {
             return std::make_pair(cur_node, depth);
         } else {
             return find_min(cur_node->leftChild(), depth + 1);
         }
     }
-    std::pair<node<T>, size_t> find_max(node<T> cur_node, size_t depth) const {
+    std::pair<node<T>, size_t> find_max(node<T> cur_node, size_t depth) {
         if (!cur_node->hasRightChild()) {
             return std::make_pair(cur_node, depth);
         } else {

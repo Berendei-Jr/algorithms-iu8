@@ -1,1 +1,0 @@
-/usr/bin/clang++ -g CMakeFiles/splay_tree.dir/main.cpp.o -o splay_tree 

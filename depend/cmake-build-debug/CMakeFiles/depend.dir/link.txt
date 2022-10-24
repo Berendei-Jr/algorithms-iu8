@@ -1,0 +1,1 @@
+/usr/bin/clang++  -g -D_GLIBCXX_DEBUG   CMakeFiles/depend.dir/main.cpp.o  -o depend 

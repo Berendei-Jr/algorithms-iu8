@@ -3,6 +3,8 @@
 #include <list>
 #include <algorithm>
 
+typedef std::unordered_set<std::list<std::string>> paths;
+
 struct Lib {
     std::string _name;
     bool _hasDependencies = false;
@@ -12,8 +14,6 @@ struct Lib {
         return l._name == _name;
     }
 };
-
-typedef std::unordered_set<std::list<std::string>> paths;
 
 bool operator==(const std::list<Lib>& l1, const std::list<Lib>& l2) {
     if (l1.size() == l2.size()) {
@@ -25,13 +25,13 @@ bool operator==(const std::list<Lib>& l1, const std::list<Lib>& l2) {
     }
     return false;
 }
-std::ostream& operator << (std::ostream& out, const std::list<Lib>& l) {
+std::ostream& operator << (std::ostream& out, const std::list<std::string>& l) {
     auto it = l.begin();
     for (std::size_t i = 0; i < l.size() - 1; ++i) {
-        out << it->_name << " ";
+        out << *it << " ";
         ++it;
     }
-    out << l.back()._name;
+    out << l.back();
     return out;
 }
 
@@ -70,20 +70,45 @@ void dependencyHandling (paths& p, const Lib& lib, const std::unordered_set<std:
     if (lib._hasDependencies) {
         for (auto& i: lib._dependencies) {
             // Проверка, было ли такое имя раньше
-            if (std::find_if(curPath.begin(), curPath.end(), [&i](const Lib& l){ return l._name == i; }) != curPath.end())
-                continue;
+
+            bool cycleDetected = false;
+            auto firstCollision = std::find_if(curPath.begin(), curPath.end(), [&i](const std::string& s){ return s == i; });
+            if (firstCollision != curPath.end()) { // найдена коллизия
+                if (curPath.size() == 1) {
+                    cycleDetected = true;
+                } else {
+                    if (firstCollision != curPath.begin()) {
+                        auto fcDecremented = --firstCollision;
+                        ++firstCollision;
+                        auto second = --curPath.end();
+                        bool cycle = true;
+                        while (fcDecremented != curPath.begin() && second != firstCollision) {
+                            if (*fcDecremented != *second) {
+                                cycle = false;
+                                break;
+                            }
+                            --fcDecremented;
+                            --second;
+                        }
+                        cycleDetected = cycle;
+                    }
+                }
+            }
+            if (cycleDetected) {
+                return;
+            }
 
             Lib tmp {i, false, false, {}};
             if (vulLibs.find(i) != vulLibs.end())
                 tmp._isVulnerable = true;
-            auto it = alldeps.find(tmp);
-            if (it != alldeps.end()) {
-                tmp._hasDependencies = it->_hasDependencies;
-                tmp._dependencies = it->_dependencies;
+            auto iter = alldeps.find(tmp);
+            if (iter != alldeps.end()) {
+                tmp._hasDependencies = iter->_hasDependencies;
+                tmp._dependencies = iter->_dependencies;
             }
-            curPath.push_back(lib);
 
             auto newPath = curPath;
+            newPath.push_back(i);
             dependencyHandling(p, tmp, vulLibs, newPath, alldeps);
         }
     }
@@ -170,7 +195,7 @@ int main() {
             }
         }
         Lib lib {i, hasDep, isVul, deps};
-        std::list<std::string> l;
+        std::list<std::string> l { lib._name };
         dependencyHandling(allPathsToVulLibs, lib, vulnerableLibs, l, allDeps);
     }
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 #include <algorithm>
+#include <tuple>
 
 template<class T>
 class Node;
@@ -41,6 +42,17 @@ template<class T>
 class splay_tree {
 
 public:
+    splay_tree() = default;
+    ~splay_tree() {
+        if (!empty()) {
+            std::list<node<T>> second_level;
+            second_level.push_back(_root->leftChild());
+            second_level.push_back(_root->rightChild());
+            delete _root;
+            clear(second_level);
+        }
+    }
+
     void add(const key_type key, const T& value) {
         if (empty()) {
             _root = new Node<T>( nullptr, value, key );
@@ -65,26 +77,26 @@ public:
         if (empty()) {
             throw std::logic_error("error\n");
         } else {
-            try {
                 auto res = find(_root, 1, key);
-                res.first->setValue(value);
-                splay(res.first, res.second);
-            } catch (const std::logic_error& e) {
-                throw e;
-            }
+                if (!std::get<2>(res)) {
+                    splay(std::get<0>(res), std::get<1>(res));
+                    return;
+                }
+                std::get<0>(res)->setValue(value);
+                splay(std::get<0>(res), std::get<1>(res));
         }
     }
     const T& search(const key_type key) {
         if (empty()) {
             throw std::logic_error("error\n");
         } else {
-            try {
-                auto res = find(_root, 1, key);
-                splay(res.first, res.second);
-                return res.first->getValue();
-            } catch (const std::logic_error& e) {
-                throw e;
+            auto res = find(_root, 1, key, false);
+            if (!std::get<2>(res)) {
+                splay(std::get<0>(res), std::get<1>(res));
+                throw std::logic_error("error\n");
             }
+            splay(std::get<0>(res), std::get<1>(res));
+            return std::get<0>(res)->getValue();
         }
     }
     void del(const key_type key) {
@@ -93,14 +105,23 @@ public:
         } else {
             try {
                 auto res = find(_root, 1, key);
-                if (res.first == _root) {
-                    _root = merge(_root->leftChild(), _root->rightChild());
+                if (!std::get<2>(res)) {
+                    splay(std::get<0>(res), std::get<1>(res));
                     return;
                 }
-                splay(res.first, res.second);
-                auto l = res.first->leftChild();
-                auto r = res.first->rightChild();
+                if (std::get<0>(res) == _root) {
+                    auto tmp = _root;
+                    _root = merge(_root->leftChild(), _root->rightChild());
+                    delete tmp;
+                    return;
+                }
+                splay(std::get<0>(res), std::get<1>(res));
+                auto l = std::get<0>(res)->leftChild();
+                auto r = std::get<0>(res)->rightChild();
+
+                auto tmp = _root;
                 _root = merge(l, r);
+                delete tmp;
             } catch (const std::logic_error& e) {
                 throw e;
             }
@@ -123,6 +144,19 @@ public:
 
 private:
     bool empty() const { return !_root; }
+    void clear(const std::list<node<T>> list) {
+        std::list<node<T>> new_level;
+        for (auto &i: list) {
+            if (i != nullptr) {
+                if (i->hasLeftChild()) { new_level.push_back(i->leftChild()); }
+                if (i->hasRightChild()) { new_level.push_back(i->rightChild()); }
+                delete i;
+            }
+        }
+        if (!new_level.empty()) {
+            clear(new_level);
+        }
+    }
     void print_level(const std::list<node<T>> list) const {
         if (std::find_if(list.begin(), list.end(), [](const node<T>& n){ return n != nullptr; }) == list.end()) { return; }
         std::list<node<T>> new_level;
@@ -150,8 +184,10 @@ private:
         print_level(new_level);
     }
     std::pair<node<T>, size_t> insert(node<T> cur_node, size_t depth, const key_type key, const T& value) {
-        if (cur_node->getKey() == key)
+        if (cur_node->getKey() == key) {
+            std::cout << "error" << std::endl;
             return std::make_pair(cur_node, depth); //TODO
+        }
         if (key < cur_node->getKey()) {
             if (cur_node->hasLeftChild()) {
                 return insert(cur_node->leftChild(), depth + 1, key, value);
@@ -235,15 +271,25 @@ private:
         zig(n, left);
         zig(n, !left);
     }
-    std::pair<node<T>, size_t> find(node<T> cur_node, size_t depth, const key_type key) {
+    std::tuple<node<T>, size_t, bool> find(node<T> cur_node, size_t depth, const key_type key, bool print_enabled = true) {
         if (cur_node->getKey() == key) {
-            return std::make_pair(cur_node, depth);
+            return std::make_tuple(cur_node, depth, true);
         } else if (cur_node->getKey() > key && cur_node->hasLeftChild()) {
-            return find(cur_node->leftChild(), depth + 1, key);
+            if (print_enabled) {
+                return find(cur_node->leftChild(), depth + 1, key);
+            } else {
+                return find(cur_node->leftChild(), depth + 1, key, false);
+            }
         } else if (cur_node->getKey() < key && cur_node->hasRightChild()) {
-            return find(cur_node->rightChild(), depth + 1, key);
+            if (print_enabled) {
+                return find(cur_node->rightChild(), depth + 1, key);
+            } else {
+                return find(cur_node->rightChild(), depth + 1, key, false);
+            }
         } else {
-            throw std::logic_error("error\n");
+            if (print_enabled)
+                std::cout << "error" << std::endl;
+            return std::make_tuple(cur_node, depth, false);
         }
     }
     std::pair<node<T>, size_t> find_min(node<T> cur_node, size_t depth) {

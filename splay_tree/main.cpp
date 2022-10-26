@@ -115,15 +115,12 @@ public:
                     delete tmp;
                     return;
                 }
-                print();
                 splay(std::get<0>(res), std::get<1>(res));
                 auto l = std::get<0>(res)->leftChild();
                 auto r = std::get<0>(res)->rightChild();
 
                 auto tmp = _root;
-                print();
                 _root = merge(l, r);
-                print();
                 delete tmp;
             } catch (const std::logic_error& e) {
                 throw e;
@@ -164,12 +161,14 @@ private:
         if (std::find_if(list.begin(), list.end(), [](const node<T>& n){ return n != nullptr; }) == list.end()) { return; }
         std::list<node<T>> new_level;
         auto i = list.begin();
+        size_t counter = 0;
         for (int s = 1; s < list.size(); ++s, ++i) {
             if (*i == nullptr) {
                 std::cout << "_ ";
                 new_level.push_back(nullptr);
                 new_level.push_back(nullptr);
             } else {
+                ++counter;
                 std::cout << '[' << (*i)->getKey() << ' ' << (*i)->getValue() << ' ' << (*i)->getFather()->getKey() << "] ";
                 new_level.push_back((*i)->leftChild());
                 new_level.push_back((*i)->rightChild());
@@ -180,10 +179,12 @@ private:
             new_level.push_back(nullptr);
             new_level.push_back(nullptr);
         } else {
+            ++counter;
             std::cout << '[' << (*i)->getKey() << ' ' << (*i)->getValue() << ' ' << (*i)->getFather()->getKey() << ']' << std::endl;
             new_level.push_back((*i)->leftChild());
             new_level.push_back((*i)->rightChild());
         }
+        //std::cout << counter << " out of " << list.size() << std::endl;
         print_level(new_level);
     }
     std::pair<node<T>, size_t> insert(node<T> cur_node, size_t depth, const key_type key, const T& value) {
@@ -314,37 +315,16 @@ private:
     node<T> merge(node<T> left, node<T> right) {
         if (left) {
             left->setFather(nullptr);
+            if (!right) {
+                return left;
+            }
             auto left_max = find_max(left, 1);
             splay(left_max.first, left_max.second);
-            if (right) {
-                left_max.first->setRightChild(right);
-                //TODO
-            }
-
-        }
-
-
-        /*if (left) {
-            auto left_max = find_max(left, 1).first;
-            if (right) { // Splay left_max
-                right->setFather(left_max);
-                left_max->setRightChild(right);
-                if (left != left_max) {
-                    if (left_max->isLeftChild()) {
-                        left_max->getFather()->setLeftChild(nullptr);
-                    } else {
-                        left_max->getFather()->setRightChild(nullptr);
-                        left_max->changeIsLeft();
-                    }
-                    left_max->setLeftChild(left);
-                    left->setFather(left_max);
-                }
-                left_max->setFather(nullptr);
-            } else {
-               left->setFather(nullptr);
-               return left;
-            }
-            return left_max;
+            if (!left_max.first->isLeftChild())
+                left_max.first->changeIsLeft();
+            left_max.first->setRightChild(right);
+            right->setFather(left_max.first);
+            return left_max.first;
         } else {
             if (right) {
                 right->setFather(nullptr);
@@ -353,7 +333,7 @@ private:
             } else {
                 return nullptr;
             }
-        }*/
+        }
     }
 
     node<T> _root = nullptr;

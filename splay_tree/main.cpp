@@ -121,6 +121,7 @@ public:
                 auto r = std::get<0>(res)->rightChild();
 
                 auto tmp = _root;
+                print();
                 _root = merge(l, r);
                 print();
                 delete tmp;
@@ -312,8 +313,20 @@ private:
     }
     node<T> merge(node<T> left, node<T> right) {
         if (left) {
-            auto left_max = find_max(left, 1).first;
+            left->setFather(nullptr);
+            auto left_max = find_max(left, 1);
+            splay(left_max.first, left_max.second);
             if (right) {
+                left_max.first->setRightChild(right);
+                //TODO
+            }
+
+        }
+
+
+        /*if (left) {
+            auto left_max = find_max(left, 1).first;
+            if (right) { // Splay left_max
                 right->setFather(left_max);
                 left_max->setRightChild(right);
                 if (left != left_max) {
@@ -340,7 +353,7 @@ private:
             } else {
                 return nullptr;
             }
-        }
+        }*/
     }
 
     node<T> _root = nullptr;

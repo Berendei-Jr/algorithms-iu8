@@ -115,12 +115,14 @@ public:
                     delete tmp;
                     return;
                 }
+                print();
                 splay(std::get<0>(res), std::get<1>(res));
                 auto l = std::get<0>(res)->leftChild();
                 auto r = std::get<0>(res)->rightChild();
 
                 auto tmp = _root;
                 _root = merge(l, r);
+                print();
                 delete tmp;
             } catch (const std::logic_error& e) {
                 throw e;
@@ -194,6 +196,7 @@ private:
             } else {
                 auto new_node = new Node<T>(cur_node, value, key);
                 cur_node->setLeftChild(new_node);
+                new_node->setFather(cur_node);
                 return std::make_pair(new_node, depth + 1);
             }
         } else {
@@ -202,6 +205,7 @@ private:
             } else {
                 auto new_node = new Node<T>(cur_node, value, key, false);
                 cur_node->setRightChild(new_node);
+                new_node->setFather(cur_node);
                 return std::make_pair(new_node, depth + 1);
             }
         }

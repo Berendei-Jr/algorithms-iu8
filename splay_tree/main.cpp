@@ -2,6 +2,15 @@
 #include <list>
 #include <algorithm>
 #include <tuple>
+#include <cmath>
+
+std::string operator*(const std::string& s, int x) {
+    std::string str;
+    for (auto i = x; i > 0; --i) {
+        str += s;
+    }
+    return str;
+}
 
 template<class T>
 class Node;
@@ -63,15 +72,46 @@ public:
             }
         }
     }
-    void print() const {
+    void print() {
         if (empty()) { std::cout << "_\n"; }
-        else {
+        std::cout << '[' << _root->getKey() << ' ' << _root->getValue() << "]\n";
+        int l = 1;
+        while (true) {
+            std::string out;
+            int power = std::pow(2, l);
+            for (int i = 0; i < power; ++i) {
+                node<T> a = _root;
+                std::string w = bin(i, l);
+                for (int j = 0; j < l; ++j) {
+                    if (!a)
+                        break;
+                    if (w[j] == '0') {
+                        a = a->leftChild();
+                    } else {
+                        a = a->rightChild();
+                    }
+                }
+
+                if (!a) {
+                    out += "_ ";
+                } else {
+                    out += '[' + std::to_string(a->getKey()) + ' ' + a->getValue() + ' ' + std::to_string(a->getFather()->getKey()) + "] ";
+                }
+            }
+            if (out == std::string("_ ") * power)
+                break;
+            else {
+                out.pop_back();
+                std::cout << out << std::endl;
+            }
+            ++l;
+        }*/
+
             std::list<node<T>> second_level;
             std::cout << '[' << _root->getKey() << ' ' << _root->getValue() << "]\n";
             second_level.push_back(_root->leftChild());
             second_level.push_back(_root->rightChild());
             print_level(second_level);
-        }
     }
     void set(const key_type key, const T& value) {
         if (empty()) {
@@ -141,8 +181,20 @@ public:
         splay(tmp.first, tmp.second);
         return std::make_pair(tmp.first->getKey(), tmp.first->getValue());
     }
+    void test_bin(int x, int l) {
+        std::cout << bin(x, l) << std::endl;
+    }
 
 private:
+    auto bin(int i, int l) {
+        std::string out;
+        for (int it = sizeof(i)*8-1; it>=0; --it)
+        {
+            out = out+std::to_string((((int)(i>>it)&1)));
+        }
+        out.erase(0, out.size() - l);
+        return out;
+    }
     bool empty() const { return !_root; }
     void clear(const std::list<node<T>> list) {
         std::list<node<T>> new_level;
@@ -351,12 +403,18 @@ int main() {
             if (command == "print") {
                 if (it != str.end()) { std::cout << "error\n"; continue; }
                 st.print();
+                std::cout << "GOTOVO, BLYAT!!!!\n";
                 continue;
+            } else if (command == "t") {
+                int x, l;
+                std::cin >> x;
+                std::cin >> l;
+                st.test_bin(x, l);
             } else if (command == "min") {
-                if (it != str.end()) { std::cout << "error\n"; continue; }
-                auto tmp = st.min();
-                std::cout << tmp.first << ' ' << tmp.second << std::endl;
-                continue;
+                    if (it != str.end()) { std::cout << "error\n"; continue; }
+                    auto tmp = st.min();
+                    std::cout << tmp.first << ' ' << tmp.second << std::endl;
+                    continue;
             } else if (command == "max") {
                 if (it != str.end()) { std::cout << "error\n"; continue; }
                 auto tmp = st.max();

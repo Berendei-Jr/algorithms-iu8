@@ -1,3 +1,7 @@
-strin = "loh"
-strin = strin[:len(strin)]
-print(strin)
+l = []
+l.append("loh")
+l.append(5)
+
+l.append(True)
+
+print(l)

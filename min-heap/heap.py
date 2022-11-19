@@ -56,34 +56,34 @@ class minHeap:
 
     def min(self):
         if self.size() == 0:
-            raise IndexError('')
-        return f'{self.__data[0].key} 0 {self.__data[0].value}'         
+            raise IndexError()
+        return self.__data[0].key, self.__data[0].value         
     def max(self):
         if self.size() == 0:
-            raise IndexError('')
+            raise IndexError()
         i = self.size() - 1
         tmpMax = i
         while i >= self.size()//2:
             if self.__data[i].key > self.__data[tmpMax].key:
                 tmpMax = i
             i -= 1    
-        return f'{self.__data[tmpMax].key} {tmpMax} {self.__data[tmpMax].value}'     
+        return self.__data[tmpMax].key, self.__data[tmpMax].value, tmpMax  
     def add(self, key, value):
         try:
             self.__hashTable[key]
-            raise LookupError('')
+            raise LookupError()
         except KeyError:
             if self.size() == 0:
                 self.__data.append(Node(key, value))
                 self.__hashTable[key] = 0
-                return 
+                return
             self.__data.append(Node(key, value))
             i = self.size() - 1
             self.__hashTable[key] = i
             self.__sift_up(i)  
     def extract(self):
         if self.size() == 0:
-            raise IndexError('')
+            raise IndexError()
         out = copy.deepcopy(self.__data[0])
         self.__data[0] = self.__data.pop(self.size() - 1)
         self.__hashTable[self.__data[0].key] = 0
@@ -105,9 +105,9 @@ class minHeap:
     def search(self, key):
         try:
             i = self.__hashTable[key]
-            return f'1 {i} {self.__data[i].value}'
+            return self.__data[i].value, i
         except KeyError:
-            return '0'
+            raise
     def set(self, key, value):
         i = self.__hashTable[key]
         self.__data[self.__hashTable[key]].value = value  
@@ -144,12 +144,14 @@ for line in sys.stdin:
         h.print(sys.stdout)
     elif line == 'min\n':
         try:
-            print(h.min())
+            tmp = h.min()
+            print(f'{tmp[0]} 0 {tmp[1]}')
         except IndexError:
             print('error')
     elif line == 'max\n':
         try:
-            print(h.max())   
+            tmp = h.max()
+            print(f'{tmp[0]} {tmp[2]} {tmp[1]}')   
         except IndexError:
             print('error')
     elif line == 'extract\n':
@@ -199,7 +201,11 @@ for line in sys.stdin:
         if (len(tmp)) != 2 or line[-1] == ' ':
             print('error')
             continue
-        print(h.search(int(tmp[1]))) 
+        try:
+            tmp = h.search(int(tmp[1]))
+            print(f'1 {tmp[1]} {tmp[0]}')
+        except KeyError:
+            print(0)     
     elif line.startswith('delete '):
         tmp = line.split()
         if (len(tmp)) != 2 or line[-1] == ' ':

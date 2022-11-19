@@ -87,8 +87,7 @@ class splayTree:
                 self.__splay(node, depth - 2)        
     def __insert(self, cur_node, depth, key, value):
         if cur_node.key == key:
-            print("error")
-            return cur_node, depth
+            return cur_node, depth, False
         if int(key) < int(cur_node.key):
             if cur_node.hasLeftChild():
                 return self.__insert(cur_node.leftChild, depth + 1, key, value)
@@ -96,7 +95,7 @@ class splayTree:
                 new_node = Node(cur_node, value, key)
                 cur_node.leftChild = new_node
                 new_node.father = cur_node
-                return new_node, depth + 1
+                return new_node, depth + 1, True
         else:
             if cur_node.hasRightChild():
                 return self.__insert(cur_node.rightChild, depth + 1, key, value)
@@ -104,7 +103,7 @@ class splayTree:
                 new_node = Node(cur_node, value, key, False)
                 cur_node.rightChild = new_node
                 new_node.father = cur_node
-                return new_node, depth + 1                    
+                return new_node, depth + 1, True                    
     def __find_min(self, cur_node, depth):
         if not cur_node.hasLeftChild():
             return cur_node, depth
@@ -240,6 +239,8 @@ class splayTree:
             self.root = Node(None, value, key)
         else:
             newNode = self.__insert(self.root, 1, key, value)
+            if not newNode[2]:
+                raise KeyError()
             if (not (newNode[0] is None)):
                 self.__splay(newNode[0], newNode[1])
     def min(self):
@@ -250,34 +251,34 @@ class splayTree:
         return tmp[0].key, tmp[0].value   
     def max(self):
         if self.root is None:
-            raise KeyError('')
+            raise KeyError()
         tmp = self.__find_max(self.root, 1)
         self.__splay(tmp[0], tmp[1])
         return tmp[0].key, tmp[0].value   
     def search(self, key):
         if self.root is None:
-            raise KeyError('')
+            raise KeyError()
         else:
             tmp = self.__find(self.root, 1, key, False)
             self.__splay(tmp[0], tmp[1])
             if not tmp[2]:
-                raise KeyError('')
-            return f'1 {tmp[0].value}'     
+                raise KeyError()
+            return tmp[0].value     
     def set(self, key, value):
         if self.root is None:
-            raise KeyError('')
+            raise KeyError()
         tmp = self.__find(self.root, 1, key)
         self.__splay(tmp[0], tmp[1])    
         if not tmp[2]:
-            raise KeyError('')
+            raise KeyError()
         tmp[0].value = value    
     def delete(self, key):
         if self.root is None:
-            raise KeyError('')
+            raise KeyError()
         tmp = self.__find(self.root, 1, key)
         if not tmp[2]:
             self.__splay(tmp[0], tmp[1])
-            raise KeyError('')
+            raise KeyError()
         if tmp[0] == self.root:
             self.root = self.__merge(self.root.leftChild, self.root.rightChild)
             return
@@ -353,7 +354,7 @@ for line in sys.stdin:
             print('error')
             continue
         try:
-            print(st.search(tmp[1]))
+            print(f'1 {st.search(tmp[1])}')
         except KeyError:
             print(0)
             continue 
